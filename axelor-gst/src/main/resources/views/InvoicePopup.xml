@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+	<form model="com.axelor.apps.account.db.Invoice" title="Invoice-popup-form" name="invoice-popup-form">
+		<field name="partner" form-view="partner-form" grid-view="partner-grid" width="200" />
+		<field name="company" form-view="company-form" grid-view="company-grid" widget="200" />
+		<field name="currency" width="60" />
+		<button name="save" title="SAVE" onClick="action-invoice-popup-view-invoice-popup-on-save" />
+
+	</form>
+	<action-view name="action-invoice-popup-view-invoice-popup-on-save" title="Invoice-popup-form" model="com.axelor.apps.account.db.Invoice">
+		<view type="form" name="invoice-form" />
+		<context name="_id" expr="eval: _ids"/>
+		<context name="_party" expr="eval: partner.getName()"/>
+		<context name="_company" expr="eval: company.getName()"/>
+		<context name="_currency" expr="eval: currency.getName()"/>
+		<context name="_operationTypeSelect" expr="eval:3" />
+	</action-view>
+</object-views>

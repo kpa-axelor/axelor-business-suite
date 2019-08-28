@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+	<module package="com.axelor.apps.base.db" name="base" />
+	<entity name="Partner" lang="java">
+		<string name="name" title="Name"></string>
+		<string name="gstContactType" selection="contact.gst.type.select" title="GstContactType"></string>
+		<string name="primaryEmail" title="PrimaryEmail"></string>
+		<string name="secondaryEmail" title="SecondaryEmail"></string>
+		<string name="primaryPhone" title="PrimaryPhone"></string>
+		<string name="secondaryPhone" title="SecondaryPhone"></string>
+		<one-to-many name="contactList" ref="com.axelor.apps.base.db.Partner" />
+
+		<extra-code>
+	<![CDATA[
+		public static final int CONTACT_TYPE_PRIMARY = 1;
+		public static final int CONTACT_TYPE_SECONDARY = 2;
+		public static final int CONTACT_TYPE_OTHER = 3;
+	]]>
+	</extra-code>
+	</entity>
+</domain-models>	

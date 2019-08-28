@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+	<form model="com.axelor.apps.account.db.InvoiceLine" title="Invoice line" name="invoice-line-form"
+		onNew="action-account-invoice-line-onnew-group" onLoad="action-group-account-invoice-line-onload" id="invoice-line-form-gst-include">
+		<panel-include view="invoice-line-form" from="axelor-account" />
+		<panel>
+			<field name="hsbn" title="HSBN" hidden="true" />
+			<field name="igst" title="IGST" readonly="true"/>
+			<field name="cgst" title="CGST" readonly="true"/>
+			<field name="sgst" title="SGST" readonly="true"/>
+		</panel>
+	</form>
+	<action-method name="action-invoice-line-method-compute-analytic-distribution" id="action-invoice-line-method-compute-analytic-distribution-override-this-action-in-gst-invoiceline">
+		<call class="com.axelor.apps.gst.web.InvoiceLineController" method="computeAnalyticDistribution" />
+	</action-method>
+
+	<!-- <action-group name="action-group-account-invoice-line-product-onchange" -->
+	<!-- id="action-group-account-invoice-line-product-onchange-extand-in-gst-module-on-product-change"> -->
+	<!-- <action name="action-invoice-line-method-get-product-information" /> -->
+	<!-- <action name="action-invoice-line-method-get-product-price" -->
+	<!-- if="__config__.app.isApp('supplychain') &amp;&amp; (__config__.app.isApp('sale') &amp;&amp; __config__.app.getApp('sale').getProductPackMgt())" /> -->
+	<!-- <action name="action-invoice-line-method-compute"/> -->
+	<!-- <action name="action-invoice-line-method-get-and-compute-analytic-distribution" /> -->
+	<!-- <action name="action-budget-validate-exceed-line-amount" /> -->
+	<!-- <action name="action-invoice-line-attrs-compute-total-pack" -->
+	<!-- if="(__config__.app.isApp('supplychain') &amp;&amp; __config__.app.getApp('sale').getProductPackMgt())" /> -->
+	<!-- <action name="action-invoice-line-method-get-fixed-asset-category" if="__config__.app.isApp('account')" /> -->
+	<!-- <action name="action-invoice-line-method-set-gst-calculation-on-product-change" if="__config__.app.isApp('gst')" /> -->
+	<!-- </action-group> -->
+	<!-- <action-method name="action-invoice-line-method-set-gst-calculation-on-product-change"> -->
+	<!-- <call class="com.axelor.apps.gst.web.InvoiceLineController" method="computeInvoiceLineGst" /> -->
+	<!-- </action-method> -->
+</object-views>

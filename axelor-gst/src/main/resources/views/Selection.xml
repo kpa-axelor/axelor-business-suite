@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+	<selection name="contact.gst.type.select">
+		<option value="1">Primary</option>
+		<option value="2">Secondary</option>
+		<option value="3">Other</option>
+	</selection>
+</object-views>
