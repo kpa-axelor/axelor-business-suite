@@ -5,9 +5,12 @@
 		<field name="partner" form-view="partner-form" grid-view="partner-grid" width="200" />
 		<field name="company" form-view="company-form" grid-view="company-grid" widget="200" />
 		<field name="currency" width="60" />
-		<button name="save" title="SAVE" onClick="action-invoice-popup-view-invoice-popup-on-save" />
+		<button name="save" title="SAVE" onClick="action-invoice-popup-method-invoice-popup-on-save" />
 
 	</form>
+	<action-method name="action-invoice-popup-method-invoice-popup-on-save">
+	<call class="com.axelor.apps.gst.web.ProductController" method="createInvoiceForm"/>
+	</action-method>
 	<action-view name="action-invoice-popup-view-invoice-popup-on-save" title="Invoice-popup-form" model="com.axelor.apps.account.db.Invoice">
 		<view type="form" name="invoice-form" />
 		<context name="_id" expr="eval: _ids"/>
