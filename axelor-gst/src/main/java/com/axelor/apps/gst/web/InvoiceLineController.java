@@ -1,13 +1,12 @@
 package com.axelor.apps.gst.web;
 
-import java.math.BigDecimal;
-
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.InvoiceLine;
 import com.axelor.exception.AxelorException;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.axelor.rpc.Context;
+import java.math.BigDecimal;
 
 public class InvoiceLineController extends com.axelor.apps.account.web.InvoiceLineController {
   @Override
@@ -32,9 +31,9 @@ public class InvoiceLineController extends com.axelor.apps.account.web.InvoiceLi
       BigDecimal cgst = ((invoiceLine.getProduct().getGstRate()).multiply(exTaxTotal));
       response.setValue("cgst", cgst);
       response.setValue("sgst", sgst);
-      
-//      Context context1 = new Context(Invoice.class);
-//      response.setValues(new HashMap<String, Object>());
+
+      //      Context context1 = new Context(Invoice.class);
+      //      response.setValues(new HashMap<String, Object>());
     }
   }
 }

@@ -15,40 +15,47 @@ import com.axelor.exception.db.repo.TraceBackRepository;
 import com.google.inject.Inject;
 import java.time.LocalDate;
 
-public class AccountManagementServiceAccountImplGstImlp extends AccountManagementServiceAccountImpl {
-	@Inject
-	TaxRepository TaxRepository;
-	@Inject
-	TaxLineRepository TaxLineRepository;
+public class AccountManagementServiceAccountImplGstImlp
+    extends AccountManagementServiceAccountImpl {
+  @Inject TaxRepository TaxRepository;
+  @Inject TaxLineRepository TaxLineRepository;
 
-	@Inject
-	public AccountManagementServiceAccountImplGstImlp(FiscalPositionService fiscalPositionService,
-			TaxService taxService) {
-		super(fiscalPositionService, taxService);
-	}
+  @Inject
+  public AccountManagementServiceAccountImplGstImlp(
+      FiscalPositionService fiscalPositionService, TaxService taxService) {
+    super(fiscalPositionService, taxService);
+  }
 
-	TaxService taxService;
-	TaxLine taxLine;
-	Tax tax;
+  TaxService taxService;
+  TaxLine taxLine;
+  Tax tax;
 
-	@Override
-	public TaxLine getTaxLine(LocalDate date, Product product, Company company, FiscalPosition fiscalPosition,
-			boolean isPurchase) throws AxelorException {
+  @Override
+  public TaxLine getTaxLine(
+      LocalDate date,
+      Product product,
+      Company company,
+      FiscalPosition fiscalPosition,
+      boolean isPurchase)
+      throws AxelorException {
 
-		super.getTaxLine(date, product, company, fiscalPosition, isPurchase);
-		System.out.println(product.getGstRate());
-		tax = TaxRepository.all()
-				.filter("self.code = 'GST'  AND self.activeTaxLine != null AND self.activeTaxLine.value = ?",
-						product.getGstRate())
-				.fetchOne();
-		System.out.println(tax);
-		System.out.println(
-				TaxRepository.all().filter("self.code = 'GST' AND self.activeTaxLine.value = ?", product.getGstRate()));
-		if (tax == null) {
-			throw new AxelorException(TraceBackRepository.CATEGORY_NO_VALUE, "please fill taxLine");
-		}
-		return tax.getActiveTaxLine();
-	}
+    super.getTaxLine(date, product, company, fiscalPosition, isPurchase);
+    System.out.println(product.getGstRate());
+    tax =
+        TaxRepository.all()
+            .filter(
+                "self.code = 'GST'  AND self.activeTaxLine != null AND self.activeTaxLine.value = ?",
+                product.getGstRate())
+            .fetchOne();
+    System.out.println(tax);
+    System.out.println(
+        TaxRepository.all()
+            .filter("self.code = 'GST' AND self.activeTaxLine.value = ?", product.getGstRate()));
+    if (tax == null) {
+      throw new AxelorException(TraceBackRepository.CATEGORY_NO_VALUE, "please fill taxLine");
+    }
+    return tax.getActiveTaxLine();
+  }
 }
 
 // tax = (Tax) TaxRepository.all().filter("self.code = GST").fetch();
