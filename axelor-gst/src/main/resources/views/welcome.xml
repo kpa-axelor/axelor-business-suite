@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+	<menuitem name="menu-dashboards-gst" order="-101" title="Dashboards-gst" icon="fa-dashboard" icon-background="blue" parent="gst-root-axelor-gst" />
+
+	<menuitem name="menu-welcome-gst" parent="menu-dashboards" title="Welcome-gst" action="welcome.all.gst" />
+
+	<dashboard name="welcome.dashboard.gst" title="Welcome-gst">
+
+		<dashlet action="chart:chart-state" />
+		<dashlet action="chart:chart-UnpaidInvoices" />
+		<dashlet action="chart:chart-PaidInvoices" />
+		<dashlet action="chart:chart-InvoicePerStatus" />
+		<dashlet action="chart:chart-InvoicePerStatusInvoiceLine" />
+		<dashlet action="action.welcome.view.all.gst" colSpan="12" />
+	</dashboard>
+
+	<action-view name="welcome.all.gst" title="Welcome-gst">
+		<view type="dashboard" name="welcome.dashboard.gst" />
+	</action-view>
+	<action-view name="action.welcome.view.all.gst" title="Older Invoices" model="com.axelor.axelorGst.db.Invoice">
+		<view type="grid" name="Invoice-grid" />
+		<domain> self.dates &lt; date(now())-30 AND self.status='paid' </domain>
+	</action-view>
+
+</object-views>
+<!-- <__date__.withDayOfMonth(1) AND self.created_on &lt; date(now()-'1month'::interval) -->

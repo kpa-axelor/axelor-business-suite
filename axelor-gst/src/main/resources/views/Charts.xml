@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_4.0.xsd">
+	<chart name="chart-state" title="Party By State">
+		<dataset type="sql">
+	<![CDATA[
+	 	SELECT ags.name as state, COUNT(agp.name) as pname 
+	 	FROM axelor_gst_party as agp 
+	 	LEFT JOIN axelor_gst_address as aga ON agp.id = aga.party 
+	 	LEFT JOIN axelor_gst_state as ags ON  aga.state = ags.id  
+	 	WHERE agp.customer = 't'
+	 	GROUP BY ags.name
+	 	
+	 	SELECT gs.name as state,COUNT(partner.full_name) as pname
+	 	FROM base_partner as partner
+	 	LEFT JOIN base_partner_address as pa ON partner.id=pa.partner;
+	 	LEFT JOIN gst_state as gs ON pa.address = gs.id
+	 	WHERE partner.is_customer = 't'
+	 	GROUP BY gs.name
+	 		
+	]]>
+	</dataset>
+		<category key="state" title="State" />
+		<series key="pname" type="pie" title="Pname" />
+	</chart>
+
+	<chart name="chart-UnpaidInvoices" title="Party By UnpaidInvoices" onInit="action-charts-record-chart-UnpaidInvoices-on-init">
+
+		<search-fields>
+			<field type="date" name="fromDate" title="From Date" />
+			<field type="date" name="toDate" title="To Date" />
+		</search-fields>
+		<dataset type="sql">
+	<![CDATA[
+	 SELECT agp.name as name ,COUNT(agi.status) as status
+	 FROM axelor_gst_invoice as agi
+	 LEFT JOIN axelor_gst_party as agp ON agi.party = agp.id
+	 WHERE 
+		agi.status != 'paid' AND
+		DATE(agi.created_on) BETWEEN DATE(:fromDate) AND DATE(:toDate)
+	GROUP BY agp.name
+	]]>
+	</dataset>
+		<category key="name" title="Party Name" />
+		<series key="status" groupBy="name" type="bar" title="Status" />
+	</chart>
+
+	<action-record name="action-charts-record-chart-UnpaidInvoices-on-init" model="com.axelor.axelorGst.db.Invoice">
+		<field name="fromDate" expr="eval:__date__.withDayOfMonth(1)" />
+		<field name="toDate" expr="eval:__date__"/>
+	</action-record>
+
+	<chart name="chart-PaidInvoices" title="Paid Invoices pre category pre product" onInit="action-charts-record-chart-UnpaidInvoices-on-init">
+		<search-fields>
+			<field type="date" name="fromDate" title="From Date" />
+			<field type="date" name="toDate" title="To Date" />
+		</search-fields>
+		<dataset type="sql">
+	<![CDATA[
+		SELECT COUNT(agi.status) as status,agp.name as product,agpc.name as category
+		FROM axelor_gst_invoice as agi
+		LEFT JOIN axelor_gst_invoice_invoice_item as agiii ON agi.id = agiii.axelor_gst_invoice
+		LEFT JOIN axelor_gst_invoice_line as agil ON agiii.invoice_item = agil.id 	
+		LEFT JOIN axelor_gst_product as agp ON agil.product = agp.id
+		LEFT JOIN axelor_gst_product_category as agpc ON agp.category=agpc.id
+		WHERE agi.status = 'paid' AND
+		DATE(agi.created_on) BETWEEN DATE(:fromDate) AND DATE(:toDate)
+		GROUP BY agp.name,agpc.name
+	]]>
+	</dataset>
+		<category key="product" title="Product" />
+		<series key="status" groupBy="category" type="bar" title="Status" />
+	</chart>
+
+	<chart name="chart-InvoicePerStatus" title="Invoice Per Status">
+		<dataset type="sql">
+	<![CDATA[
+		SELECT agi.status as status,SUM(agi.gross_amount) as amount
+		FROM axelor_gst_invoice as agi 
+		GROUP BY agi.status
+	]]>
+	</dataset>
+		<category key="status" title="status" />
+		<series key="amount" groupBy="status" type="bar" title="Amount" />
+	</chart>
+
+	<chart name="chart-InvoicePerStatusInvoiceLine" title="Invoice Per Status Pre Invoice Line">
+		<dataset type="sql">
+	<![CDATA[
+		SELECT agi.status as status,COUNT(agi.id) as invoiceline
+		FROM axelor_gst_invoice as agi 
+		GROUP BY agi.status
+	]]>
+	</dataset>
+		<category key="invoiceline" title="status" type="text" />
+		<series key="invoiceline" groupBy="status" type="line" title="InvoiceLine" />
+	</chart>
+
+</object-views>
