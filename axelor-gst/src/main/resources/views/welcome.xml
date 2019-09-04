@@ -18,9 +18,9 @@
 	<action-view name="welcome.all.gst" title="Welcome-gst">
 		<view type="dashboard" name="welcome.dashboard.gst" />
 	</action-view>
-	<action-view name="action.welcome.view.all.gst" title="Older Invoices" model="com.axelor.axelorGst.db.Invoice">
+	<action-view name="action.welcome.view.all.gst" title="Older Invoices" model="com.axelor.apps.account.db.Invoice">
 		<view type="grid" name="Invoice-grid" />
-		<domain> self.dates &lt; date(now())-30 AND self.status='paid' </domain>
+		<domain> self.createdOn &lt; date(now())-30 AND self.statusSelect= 3</domain>
 	</action-view>
 
 </object-views>

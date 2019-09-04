@@ -4,21 +4,16 @@
 	<chart name="chart-state" title="Party By State">
 		<dataset type="sql">
 	<![CDATA[
-	 	SELECT ags.name as state, COUNT(agp.name) as pname 
-	 	FROM axelor_gst_party as agp 
-	 	LEFT JOIN axelor_gst_address as aga ON agp.id = aga.party 
-	 	LEFT JOIN axelor_gst_state as ags ON  aga.state = ags.id  
-	 	WHERE agp.customer = 't'
-	 	GROUP BY ags.name
 	 	
-	 	SELECT gs.name as state,COUNT(partner.full_name) as pname
+	 	SELECT gs.name as state, COUNT(partner.name) as pname
 	 	FROM base_partner as partner
-	 	LEFT JOIN base_partner_address as pa ON partner.id=pa.partner;
-	 	LEFT JOIN gst_state as gs ON pa.address = gs.id
+	 	LEFT JOIN base_partner_address as pa ON partner.id=pa.partner
+	 	LEFT JOIN base_address as ba ON ba.id = pa.address
+	 	LEFT JOIN gst_state as gs ON ba.state = gs.id
 	 	WHERE partner.is_customer = 't'
 	 	GROUP BY gs.name
 	 		
-	]]>
+	]]>		
 	</dataset>
 		<category key="state" title="State" />
 		<series key="pname" type="pie" title="Pname" />
@@ -32,12 +27,12 @@
 		</search-fields>
 		<dataset type="sql">
 	<![CDATA[
-	 SELECT agp.name as name ,COUNT(agi.status) as status
-	 FROM axelor_gst_invoice as agi
-	 LEFT JOIN axelor_gst_party as agp ON agi.party = agp.id
+	 SELECT agp.name as name ,COUNT(ai.status_select) as status
+	 FROM account_invoice as ai
+	 LEFT JOIN base_partner as agp ON ai.partner = agp.id
 	 WHERE 
-		agi.status != 'paid' AND
-		DATE(agi.created_on) BETWEEN DATE(:fromDate) AND DATE(:toDate)
+		(ai.status_select != '3' OR ai.status_select != '4') AND
+		DATE(ai.created_on) BETWEEN DATE(:fromDate) AND DATE(:toDate)
 	GROUP BY agp.name
 	]]>
 	</dataset>
@@ -45,9 +40,9 @@
 		<series key="status" groupBy="name" type="bar" title="Status" />
 	</chart>
 
-	<action-record name="action-charts-record-chart-UnpaidInvoices-on-init" model="com.axelor.axelorGst.db.Invoice">
+	<action-record name="action-charts-record-chart-UnpaidInvoices-on-init" model="com.axelor.apps.account.db.Invoice">
 		<field name="fromDate" expr="eval:__date__.withDayOfMonth(1)" />
-		<field name="toDate" expr="eval:__date__"/>
+		<field name="toDate" expr="eval:__date__" />
 	</action-record>
 
 	<chart name="chart-PaidInvoices" title="Paid Invoices pre category pre product" onInit="action-charts-record-chart-UnpaidInvoices-on-init">
@@ -57,15 +52,16 @@
 		</search-fields>
 		<dataset type="sql">
 	<![CDATA[
-		SELECT COUNT(agi.status) as status,agp.name as product,agpc.name as category
-		FROM axelor_gst_invoice as agi
-		LEFT JOIN axelor_gst_invoice_invoice_item as agiii ON agi.id = agiii.axelor_gst_invoice
-		LEFT JOIN axelor_gst_invoice_line as agil ON agiii.invoice_item = agil.id 	
-		LEFT JOIN axelor_gst_product as agp ON agil.product = agp.id
-		LEFT JOIN axelor_gst_product_category as agpc ON agp.category=agpc.id
-		WHERE agi.status = 'paid' AND
-		DATE(agi.created_on) BETWEEN DATE(:fromDate) AND DATE(:toDate)
-		GROUP BY agp.name,agpc.name
+		
+		SELECT pb.name as product ,COUNT(ai.status_select) as status,pbc.name as category
+	 	FROM account_invoice as ai
+	 	LEFT JOIN account_invoice_line  as ail ON ail.invoice = ai.id
+	 	LEFT JOIN base_product pb ON ail.product=pb.id
+	 	LEFT JOIN base_product_category as pbc ON pb.product_category  = pbc.id
+	 	WHERE 
+		ai.status_select = '3'  AND
+		DATE(ai.created_on) BETWEEN DATE(:fromDate) AND DATE(:toDate)
+		GROUP BY pb.name,pbc.name
 	]]>
 	</dataset>
 		<category key="product" title="Product" />
@@ -75,9 +71,11 @@
 	<chart name="chart-InvoicePerStatus" title="Invoice Per Status">
 		<dataset type="sql">
 	<![CDATA[
-		SELECT agi.status as status,SUM(agi.gross_amount) as amount
-		FROM axelor_gst_invoice as agi 
-		GROUP BY agi.status
+		
+		SELECT ai.status_select as status ,SUM(ai.in_tax_total) as ammount
+	 	FROM account_invoice as ai
+		GROUP BY ai.status_select
+		
 	]]>
 	</dataset>
 		<category key="status" title="status" />
@@ -87,9 +85,10 @@
 	<chart name="chart-InvoicePerStatusInvoiceLine" title="Invoice Per Status Pre Invoice Line">
 		<dataset type="sql">
 	<![CDATA[
-		SELECT agi.status as status,COUNT(agi.id) as invoiceline
-		FROM axelor_gst_invoice as agi 
-		GROUP BY agi.status
+					
+		SELECT ai.status_select as status ,COUNT(ai.id) as invoiceline
+	 	FROM account_invoice as ai
+		GROUP BY ai.status_select
 	]]>
 	</dataset>
 		<category key="invoiceline" title="status" type="text" />

@@ -12,6 +12,8 @@ import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.gst.service.InvoiceServiceImplGstInvoiceImpl;
+import com.axelor.exception.AxelorException;
 import com.axelor.inject.Beans;
 import com.axelor.meta.schema.actions.ActionView;
 import com.axelor.rpc.ActionRequest;
@@ -24,93 +26,102 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductController {
-  @Inject ProductRepository productRepository;
-  @Inject TaxRepository TaxRepository;
+	@Inject
+	ProductRepository productRepository;
+	@Inject
+	TaxRepository TaxRepository;
+	@Inject
+	InvoiceServiceImplGstInvoiceImpl invoiceServiceImplGstInvoiceImpl;
 
-  @Transactional
-  public void createInvoiceForm(ActionRequest request, ActionResponse response) {
-    Invoice invoice1 = request.getContext().asType(Invoice.class);
-    @SuppressWarnings("unchecked")
-    List<Integer> ids = (List<Integer>) request.getContext().get("_id");
-    List<InvoiceLine> invoiceLineList = new ArrayList<InvoiceLine>();
-    List<InvoiceLineTax> invoiceLineTexList = new ArrayList<InvoiceLineTax>();
-    InvoiceLineTax invoiceLineTax;
-    Invoice invoice = new Invoice();
-    Tax tax;
-    System.out.println("itemids=>" + ids);
-    System.out.println(request.getContext().get("partner"));
-    Product product;
-    InvoiceLine invoiceLine;
-    BigDecimal qty = new BigDecimal(1);
-    BigDecimal exTaxTotal = new BigDecimal(0);
-    BigDecimal inTaxTotal = new BigDecimal(0);
-    BigDecimal onlyTaxTotal = new BigDecimal(0);
-    for (int i = 0; i < ids.size(); i++) {
-      product = productRepository.all().filter("self.id = ?", ids.get(i)).fetchOne();
-      System.out.println("product=>" + product);
-      invoiceLine = new InvoiceLine();
+	@Transactional
+	public void createInvoiceForm(ActionRequest request, ActionResponse response) throws AxelorException {
 
-      invoiceLine.setProduct(product);
-      invoiceLine.setTypeSelect(0);
-      invoiceLine.setProductName(product.getName());
-      invoiceLine.setQty(qty);
-      invoiceLine.setPrice(product.getSalePrice());
-      System.out.println("ExTotal=>" + qty.multiply(invoiceLine.getPrice()));
-      invoiceLine.setExTaxTotal(
-          (qty.multiply(invoiceLine.getPrice())
-              .setScale(AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, RoundingMode.HALF_EVEN)));
+		Invoice invoice1 = request.getContext().asType(Invoice.class);
+		@SuppressWarnings("unchecked")
+		List<Integer> ids = (List<Integer>) request.getContext().get("_id");
+		List<InvoiceLine> invoiceLineList = new ArrayList<InvoiceLine>();
+		List<InvoiceLineTax> invoiceLineTexList = new ArrayList<InvoiceLineTax>();
+		InvoiceLineTax invoiceLineTax;
+		Invoice invoice = new Invoice();
+		Partner partner = new Partner();
+		Company company = new Company();
 
-      tax =
-          TaxRepository.all()
-              .filter(
-                  "self.code = 'GST'  AND self.activeTaxLine != null AND self.activeTaxLine.value = ?",
-                  product.getGstRate())
-              .fetchOne();
-      if (tax != null) {
-        invoiceLineTax = new InvoiceLineTax();
-        invoiceLine.setTaxLine(tax.getActiveTaxLine());
-        invoiceLineTax.setTaxLine(tax.getActiveTaxLine());
-        BigDecimal taxTotal =
-            (invoiceLine.getExTaxTotal().multiply(invoiceLine.getTaxLine().getValue()))
-                .setScale(AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, RoundingMode.HALF_EVEN);
-        invoiceLineTax.setTaxTotal(taxTotal);
-        invoiceLineTax.setExTaxBase(invoiceLine.getExTaxTotal());
-        onlyTaxTotal = onlyTaxTotal.add(taxTotal);
+		company = invoice1.getCompany();
+		partner = (Partner) request.getContext().get("partner");
+		Currency currency = (Currency) request.getContext().get("currency");
+		invoice.setCompany(company);
+		invoice.setPartner(partner);
+		invoice.setCurrency(currency);
+		invoice.setOperationTypeSelect(3);
+		invoice.setAddress(partner.getMainAddress());
+		Tax tax;
+		System.out.println("itemids=>" + ids);
+		System.out.println(request.getContext().get("partner"));
+		Product product;
+		InvoiceLine invoiceLine;
+		BigDecimal qty = new BigDecimal(1);
+		BigDecimal exTaxTotal = new BigDecimal(0);
+		BigDecimal inTaxTotal = new BigDecimal(0);
+		BigDecimal onlyTaxTotal = new BigDecimal(0);
+		for (int i = 0; i < ids.size(); i++) {
+			product = productRepository.all().filter("self.id = ?", ids.get(i)).fetchOne();
+			System.out.println("product=>" + product);
+			invoiceLine = new InvoiceLine();
+			invoiceLine.setProduct(product);
+			invoiceLine.setTypeSelect(0);
+			invoiceLine.setProductName(product.getName());
+			invoiceLine.setQty(qty);
+			invoiceLine.setPrice(product.getSalePrice());
+			System.out.println("ExTotal=>" + qty.multiply(invoiceLine.getPrice()));
+			invoiceLine.setExTaxTotal((qty.multiply(invoiceLine.getPrice())
+					.setScale(AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, RoundingMode.HALF_EVEN)));
 
-        invoice.addInvoiceLineTaxListItem(invoiceLineTax);
-      } else {
-        invoiceLine.setTaxLine(null);
-      }
+			tax = TaxRepository.all()
+					.filter("self.code = 'GST'  AND self.activeTaxLine != null AND self.activeTaxLine.value = ?",
+							product.getGstRate())
+					.fetchOne();
+			if (tax != null) {
+				invoiceLineTax = new InvoiceLineTax();
+				invoiceLine.setTaxLine(tax.getActiveTaxLine());
+				invoiceLineTax.setTaxLine(tax.getActiveTaxLine());
+				BigDecimal taxTotal = (invoiceLine.getExTaxTotal().multiply(invoiceLine.getTaxLine().getValue()))
+						.setScale(AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, RoundingMode.HALF_EVEN);
+				invoiceLineTax.setTaxTotal(taxTotal);
+				invoiceLineTax.setExTaxBase(invoiceLine.getExTaxTotal());
+				onlyTaxTotal = onlyTaxTotal.add(taxTotal);
+				invoice.addInvoiceLineTaxListItem(invoiceLineTax);
+			} else {
+				invoiceLine.setTaxLine(null);
+			}
 
-      exTaxTotal = exTaxTotal.add(invoiceLine.getExTaxTotal());
-      invoice.setExTaxTotal(exTaxTotal);
-      invoice.addInvoiceLineListItem(invoiceLine);
-      invoice.setTaxTotal(onlyTaxTotal);
-      invoice.setInTaxTotal(invoice.getExTaxTotal().add(onlyTaxTotal));
-    }
+			exTaxTotal = exTaxTotal.add(invoiceLine.getExTaxTotal());
+			invoice.setExTaxTotal(exTaxTotal);
+			invoice.addInvoiceLineListItem(invoiceLine);
+			invoice.setTaxTotal(onlyTaxTotal);
+			invoice.setInTaxTotal(invoice.getExTaxTotal().add(onlyTaxTotal));
 
-    Partner partner = new Partner();
-    Company company = new Company();
-    company = invoice1.getCompany();
+			if (tax != null) {
+				if (!(invoice.getCompany().getAddress().getState()).equals(invoice.getAddress().getState())) {
+					BigDecimal igst = new BigDecimal(0);
+					igst = ((invoiceLine.getTaxLine().getValue()).multiply(invoiceLine.getExTaxTotal()));
+					invoiceLine.setIgst(igst);
+				} else {
+					BigDecimal sgst = new BigDecimal(0);
+					BigDecimal cgst = new BigDecimal(0);
+					sgst = ((invoiceLine.getTaxLine().getValue()).multiply(invoiceLine.getExTaxTotal()));
+					cgst = ((invoiceLine.getTaxLine().getValue()).multiply(invoiceLine.getExTaxTotal()));
+					invoiceLine.setCgst(cgst);
+					invoiceLine.setSgst(sgst);
+				}
+			}
+		}
 
-    partner = (Partner) request.getContext().get("partner");
-    Currency currency = (Currency) request.getContext().get("currency");
-    invoice.setCompany(company);
-    invoice.setPartner(partner);
-    invoice.setAddress(partner.getMainAddress());
-    invoice.setCurrency(currency);
-    invoice.setOperationTypeSelect(3);
-    System.out.println("before save");
-    InvoiceRepository invoiceRepositor = Beans.get(InvoiceRepository.class);
-    invoiceRepositor.save(invoice);
-    System.out.println("=>invoiceId" + invoice.getId());
+		invoice = invoiceServiceImplGstInvoiceImpl.compute(invoice);
 
-    response.setView(
-        ActionView.define("Create Invoice")
-            .model(Invoice.class.getName())
-            .add("form", "Invoice-form")
-            .add("grid", "Invoice-grid")
-            .context("_showRecord", invoice.getId())
-            .map());
-  }
+		InvoiceRepository invoiceRepositor = Beans.get(InvoiceRepository.class);
+		invoiceRepositor.save(invoice);
+
+		response.setView(ActionView.define("Create Invoice").model(Invoice.class.getName()).add("form", "Invoice-form")
+				.add("grid", "Invoice-grid").context("_showRecord", invoice.getId()).map());
+	}
 }
